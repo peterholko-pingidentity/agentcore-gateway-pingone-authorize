@@ -116,9 +116,9 @@ The Lambda uses only the Python standard library — no dependencies to package 
 no layers required.
 
 1. Create a Python 3.11+ Lambda function with handler
-   `lambda_function.lambda_handler`.
-2. Upload `lambda_function.py` (e.g. paste in the console, or
-   `zip function.zip lambda_function.py` and upload).
+   `pingone_authorize_interceptor.lambda_handler`.
+2. Upload `pingone_authorize_interceptor.py` (e.g. paste in the console, or
+   `zip function.zip pingone_authorize_interceptor.py` and upload).
 3. Set the environment variables from the table above (at minimum
    `PINGONE_DECISION_ENDPOINT_URL`).
 4. Register the Lambda as the **REQUEST interceptor** on your AgentCore Gateway.
@@ -134,7 +134,7 @@ See the AWS docs for
 The handler is a plain function you can exercise without AWS:
 
 ```python
-import json, lambda_function as lf
+import json, pingone_authorize_interceptor as lf
 
 event = {"mcp": {"gatewayRequest": {
     "path": "/mcp", "httpMethod": "POST",
