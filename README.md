@@ -79,13 +79,47 @@ can consume it:
 
 The wrapping key (`attributes` above) is configurable via
 `PINGONE_ATTRIBUTES_KEY`. Set it to your decision endpoint's expected key, or to
-an empty string to send the context as the top-level object. In your PingOne
-policy, reference these values through your attribute-provider mappings (e.g.
-`attributes.body.params.name`, `attributes.token.subject`).
+an empty string to send the context as the top-level object.
 
-> **Note:** The token claims are included only if `passRequestHeaders` is set to
-> `true` in the interceptor configuration — otherwise the gateway does not pass
-> request headers to the Lambda.
+### Setting `PINGONE_ATTRIBUTES_KEY` and mapping the attributes
+
+This is the setting that most often trips people up, because it must agree with
+how your PingOne decision endpoint and Trust Framework attributes are defined.
+Two independent things have to line up:
+
+1. **The top-level key** (`PINGONE_ATTRIBUTES_KEY`) — the single wrapper object
+   the decision endpoint reads request attributes from. Pick the value that
+   matches your endpoint:
+
+   | `PINGONE_ATTRIBUTES_KEY` | Body the Lambda sends | Use when your endpoint expects… |
+   | --- | --- | --- |
+   | `attributes` *(default)* | `{ "attributes": { …context } }` | attributes nested under `attributes` |
+   | `parameters` | `{ "parameters": { …context } }` | a differently-named wrapper |
+   | `` *(empty string)* | `{ …context }` | a flat, top-level attribute map |
+
+2. **The attribute paths** — inside that wrapper, each Trust Framework attribute
+   you want to evaluate resolves to a JSON path into the context. With the
+   default key `attributes`, the example body above exposes these paths:
+
+   | JSON path (resolver) | Example value | Typical policy use |
+   | --- | --- | --- |
+   | `attributes.path` | `/mcp` | Gateway request path |
+   | `attributes.httpMethod` | `POST` | HTTP method |
+   | `attributes.body.method` | `tools/call` | MCP/JSON-RPC method |
+   | `attributes.body.params.name` | `transfer_funds` | Tool being invoked |
+   | `attributes.body.params.arguments.amount` | `100` | A specific tool argument |
+   | `attributes.token.subject` | `user-123` | Authenticated subject (`sub`) |
+   | `attributes.token.client_id` | `abc` | Calling client |
+   | `attributes.token.scope` | `openid` | Granted scopes |
+   | `attributes.token.issuer` | `https://auth.pingone.com/<envId>` | Token issuer |
+
+   If you set `PINGONE_ATTRIBUTES_KEY` to `parameters`, drop the `attributes.`
+   prefix in favor of `parameters.` (e.g. `parameters.body.params.name`). If you
+   set it to an empty string, drop the prefix entirely (e.g. `body.params.name`).
+
+> **Note:** The `token.*` attributes are included only if `passRequestHeaders`
+> is set to `true` in the interceptor configuration — otherwise the gateway does
+> not pass request headers to the Lambda, and those paths will be absent.
 
 ## Configuration
 
