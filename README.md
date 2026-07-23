@@ -134,7 +134,7 @@ See the AWS docs for
 The handler is a plain function you can exercise without AWS:
 
 ```python
-import json, pingone_authorize_interceptor as lf
+import json, pingone_authorize_interceptor as interceptor
 
 event = {"mcp": {"gatewayRequest": {
     "path": "/mcp", "httpMethod": "POST",
@@ -143,10 +143,10 @@ event = {"mcp": {"gatewayRequest": {
              "params": {"name": "transfer_funds", "arguments": {"amount": 100}}}}}}
 
 # Stub the PDP call to test enforcement without a live PingOne tenant:
-lf.PINGONE_DECISION_ENDPOINT_URL = "https://example.test/decision"
-lf._query_pingone_decision = lambda req: {"decision": "DENY"}
+interceptor.PINGONE_DECISION_ENDPOINT_URL = "https://example.test/decision"
+interceptor._query_pingone_decision = lambda req: {"decision": "DENY"}
 
-print(json.dumps(lf.lambda_handler(event, None), indent=2))
+print(json.dumps(interceptor.lambda_handler(event, None), indent=2))
 # -> mcp.transformedGatewayResponse with a JSON-RPC error (blocked)
 ```
 
