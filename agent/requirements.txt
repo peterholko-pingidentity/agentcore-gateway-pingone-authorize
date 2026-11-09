@@ -1,0 +1,7 @@
+# Runtime dependencies (packaged for arm64 / CPython 3.12 by deploy.py). Versions tested locally.
+strands-agents==1.64.0
+bedrock-agentcore==1.24.2
+boto3==1.43.117
+httpx==0.28.1
+PyJWT==2.15.1
+mcp==2.3.0  # MCP protocol 2026-07-28 (multi round-trip requests); the agent's Gateway session is built on it

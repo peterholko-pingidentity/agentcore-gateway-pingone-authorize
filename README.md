@@ -1,191 +1,48 @@
-# AgentCore Gateway → PingOne Authorize
+# AgentCore Gateway + PingOne Authorize, with CIBA approvals
 
-An AWS Bedrock **AgentCore Gateway REQUEST interceptor** Lambda that submits every
-inbound gateway request to **PingOne Authorize** for a policy decision, and
-**blocks** the request when the decision is not `PERMIT`.
+Demo code for an AI agent that acts **as the signed-in user** through Amazon Bedrock AgentCore Gateway. PingOne
+Authorize decides every MCP tool call, and risky ones, like deleting a user, wait until the user approves them on
+another device (PingOne CIBA, by email in the demo).
 
-The interceptor runs before the gateway forwards a call to its target (an MCP
-server or HTTP target). It turns the gateway into a policy enforcement point
-(PEP) and delegates the authorization decision to PingOne Authorize as the policy
-decision point (PDP).
+> **Demo code, not a production integration kit.**
 
-```
-MCP client ──▶ AgentCore Gateway ──▶ [ REQUEST interceptor (this Lambda) ]
-                                              │
-                                              ├─▶ PingOne Authorize (PDP)
-                                              │      └─ PERMIT / DENY / …
-                                              │
-                       PERMIT ◀──────────────┤  allow  → forward to target
-                       else   ◀──────────────┘  block  → short-circuit with error
-```
+| Folder | What it is |
+|---|---|
+| [`agent/`](agent/) | Strands agent on AgentCore Runtime (Python, Strands 1.64 + MCP SDK 2.3). It exchanges the user's PingOne token for a Gateway token through AgentCore Identity and calls the Gateway's tools. |
+| [`p1az-ciba-authorizer/`](p1az-ciba-authorizer/) | The Gateway's interceptor Lambda (Rust). It asks PingOne Authorize API Access Management (sideband) about each call and, when the policy asks for approval, runs PingOne CIBA, with approval records in DynamoDB. A fork of the PingOne Authorize AWS Bedrock Gateway Lambda authorizer prototype. |
 
-## How it works
+## How approvals work
 
-For each invocation the Lambda:
+Everything speaks **MCP 2026-07-28 only** (the Gateway's `supportedVersions` is `["2026-07-28"]`). Approvals use
+the protocol's multi round-trip requests:
 
-1. **Extracts** the inbound request from the AgentCore Gateway interceptor event
-   (path, HTTP method, the full MCP/JSON-RPC body, and — when present — the
-   decoded claims of the `Authorization` bearer token).
-2. **Builds a generic decision request** containing that full request context.
-   It makes **no assumption** about your PingOne policy or Trust Framework; it
-   forwards everything so any policy can reference whatever attributes it needs.
-3. **Calls the PingOne Authorize decision endpoint** over HTTPS, authenticating
-   with a worker-app access token (client-credentials) or a static token.
-4. **Enforces the decision**:
-   - `PERMIT` → returns `transformedGatewayRequest`, so the gateway forwards the
-     call to the target unchanged.
-   - `DENY` / `NOT_APPLICABLE` / `INDETERMINATE` / anything unexpected → returns
-     `transformedGatewayResponse`, which **short-circuits the gateway**: the
-     target is never called and the caller receives a JSON-RPC error (HTTP `403`
-     by default).
+1. A `tools/call` that the policy wants approved starts PingOne CIBA, and the authorizer holds the call for up to
+   `CIBA_HOLD_SECONDS` (20 s by default).
+2. If the user hasn't approved by then, the Gateway answers `{"resultType": "input_required", "requestState": …}`
+   with the code to show in `_meta["com.pingidentity/approval"]`.
+3. The MCP client sends the same call again with that `requestState` until it's approved, declined or expired.
+   Stock MCP SDK 2.x clients do this with no extra code.
 
-Returning a `transformedGatewayResponse` from a REQUEST interceptor is the
-documented AgentCore mechanism for responding immediately without invoking the
-target. See
-[Using interceptors with Gateway](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-interceptors.html).
+Refusals come back as JSON-RPC errors at HTTP 200: `-32080` (declined, expired or invalid approval) and `-32081`
+(policy denial).
 
-### Fail-closed by design
+## Docs
 
-If `PINGONE_DECISION_ENDPOINT_URL` is unset, or PingOne is unreachable or returns
-an error, the request is **blocked** by default. Set `PINGONE_FAIL_OPEN=true` to
-allow requests through when the PDP cannot be consulted.
+- [Setup guide](https://aws-agentcore-ping.pingtapdemos.com/): step by step, assuming your own PingOne and AWS
+  accounts and MCP servers.
+- [Blog post](https://blog.pingtapdemos.com/agentcore-gateway-approvals/): what the demo does and what we learned
+  building it.
+- [`agent/README.md`](agent/README.md) and [`p1az-ciba-authorizer/README.md`](p1az-ciba-authorizer/README.md):
+  behaviour, configuration, build and tests.
 
-## The decision request body
+## Known issue
 
-The Lambda forwards a full snapshot of the request so any PingOne configuration
-can consume it:
+AgentCore Gateway currently passes the client's 2026-07-28 fields in `params._meta` on to MCP servers it talks to
+at an older version. Servers that check those fields against the request's headers, such as Snowflake's managed MCP
+server, refuse every request. It's reported to AWS; until it's fixed, try each MCP server through the Gateway
+before you rely on it. The setup guide has the details.
 
-```json
-{
-  "attributes": {
-    "path": "/mcp",
-    "httpMethod": "POST",
-    "body": {
-      "jsonrpc": "2.0",
-      "id": 7,
-      "method": "tools/call",
-      "params": { "name": "transfer_funds", "arguments": { "amount": 100 } }
-    },
-    "token": {
-      "subject": "user-123",
-      "client_id": "abc",
-      "scope": "openid",
-      "issuer": "https://auth.pingone.com/<envId>",
-      "audience": "..."
-    }
-  }
-}
-```
+## Earlier version
 
-The wrapping key (`attributes` above) is configurable via
-`PINGONE_ATTRIBUTES_KEY`. Set it to your decision endpoint's expected key, or to
-an empty string to send the context as the top-level object.
-
-### Setting `PINGONE_ATTRIBUTES_KEY` and mapping the attributes
-
-This is the setting that most often trips people up, because it must agree with
-how your PingOne decision endpoint and Trust Framework attributes are defined.
-Two independent things have to line up:
-
-1. **The top-level key** (`PINGONE_ATTRIBUTES_KEY`) — the single wrapper object
-   the decision endpoint reads request attributes from. Pick the value that
-   matches your endpoint:
-
-   | `PINGONE_ATTRIBUTES_KEY` | Body the Lambda sends | Use when your endpoint expects… |
-   | --- | --- | --- |
-   | `attributes` *(default)* | `{ "attributes": { …context } }` | attributes nested under `attributes` |
-   | `parameters` | `{ "parameters": { …context } }` | a differently-named wrapper |
-   | `` *(empty string)* | `{ …context }` | a flat, top-level attribute map |
-
-2. **The attribute paths** — inside that wrapper, each Trust Framework attribute
-   you want to evaluate resolves to a JSON path into the context. With the
-   default key `attributes`, the example body above exposes these paths:
-
-   | JSON path (resolver) | Example value | Typical policy use |
-   | --- | --- | --- |
-   | `attributes.path` | `/mcp` | Gateway request path |
-   | `attributes.httpMethod` | `POST` | HTTP method |
-   | `attributes.body.method` | `tools/call` | MCP/JSON-RPC method |
-   | `attributes.body.params.name` | `transfer_funds` | Tool being invoked |
-   | `attributes.body.params.arguments.amount` | `100` | A specific tool argument |
-   | `attributes.token.subject` | `user-123` | Authenticated subject (`sub`) |
-   | `attributes.token.client_id` | `abc` | Calling client |
-   | `attributes.token.scope` | `openid` | Granted scopes |
-   | `attributes.token.issuer` | `https://auth.pingone.com/<envId>` | Token issuer |
-
-   If you set `PINGONE_ATTRIBUTES_KEY` to `parameters`, drop the `attributes.`
-   prefix in favor of `parameters.` (e.g. `parameters.body.params.name`). If you
-   set it to an empty string, drop the prefix entirely (e.g. `body.params.name`).
-
-> **Note:** The `token.*` attributes are included only if `passRequestHeaders`
-> is set to `true` in the interceptor configuration — otherwise the gateway does
-> not pass request headers to the Lambda, and those paths will be absent.
-
-## Configuration
-
-All configuration is via Lambda environment variables.
-
-| Variable | Required | Default | Description |
-| --- | --- | --- | --- |
-| `PINGONE_DECISION_ENDPOINT_URL` | **Yes** | — | Full runtime URL of the decision endpoint (shown in the PingOne console), e.g. `https://auth.pingone.com/<envId>/as/decision/<decisionEndpointId>`. |
-| `PINGONE_TOKEN_ENDPOINT` | For worker token | — | OAuth token endpoint for the client-credentials grant. |
-| `PINGONE_CLIENT_ID` | For worker token | — | Worker-app client ID. |
-| `PINGONE_CLIENT_SECRET` | For worker token | — | Worker-app client secret. |
-| `PINGONE_TOKEN_SCOPE` | No | — | Optional scope requested for the worker token. |
-| `PINGONE_ACCESS_TOKEN` | No | — | Static bearer token as an alternative to the grant (useful for testing). |
-| `PINGONE_ATTRIBUTES_KEY` | No | `attributes` | Top-level key wrapping the request context; empty string sends a flat body. |
-| `PINGONE_HTTP_TIMEOUT` | No | `5` | Network timeout (seconds) for calls to PingOne. |
-| `PINGONE_FAIL_OPEN` | No | `false` | `true` allows requests through when the PDP cannot be consulted. |
-| `PINGONE_DENY_STATUS_CODE` | No | `403` | HTTP status code returned to the caller for a blocked request. |
-
-Authentication precedence: a client-credentials grant (all of
-`PINGONE_TOKEN_ENDPOINT`, `PINGONE_CLIENT_ID`, `PINGONE_CLIENT_SECRET`) is used if
-configured, with the token cached in memory until shortly before it expires;
-otherwise `PINGONE_ACCESS_TOKEN` is used; otherwise the endpoint is called with no
-`Authorization` header.
-
-## Deployment
-
-The Lambda uses only the Python standard library — no dependencies to package and
-no layers required.
-
-1. Create a Python 3.11+ Lambda function with handler
-   `pingone_authorize_interceptor.lambda_handler`.
-2. Upload `pingone_authorize_interceptor.py` (e.g. paste in the console, or
-   `zip function.zip pingone_authorize_interceptor.py` and upload).
-3. Set the environment variables from the table above (at minimum
-   `PINGONE_DECISION_ENDPOINT_URL`).
-4. Register the Lambda as the **REQUEST interceptor** on your AgentCore Gateway.
-   To let policies use token claims, enable `passRequestHeaders` on the
-   interceptor configuration.
-5. Grant your gateway execution role permission to invoke this specific Lambda.
-
-See the AWS docs for
-[configuring interceptors](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-interceptors-configuration.html).
-
-## Local testing
-
-The handler is a plain function you can exercise without AWS:
-
-```python
-import json, pingone_authorize_interceptor as interceptor
-
-event = {"mcp": {"gatewayRequest": {
-    "path": "/mcp", "httpMethod": "POST",
-    "headers": {"Authorization": "Bearer <jwt>"},
-    "body": {"jsonrpc": "2.0", "id": 7, "method": "tools/call",
-             "params": {"name": "transfer_funds", "arguments": {"amount": 100}}}}}}
-
-# Stub the PDP call to test enforcement without a live PingOne tenant:
-interceptor.PINGONE_DECISION_ENDPOINT_URL = "https://example.test/decision"
-interceptor._query_pingone_decision = lambda req: {"decision": "DENY"}
-
-print(json.dumps(interceptor.lambda_handler(event, None), indent=2))
-# -> mcp.transformedGatewayResponse with a JSON-RPC error (blocked)
-```
-
-## References
-
-- [Using interceptors with Gateway](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-interceptors.html)
-- [Types of interceptors (input/output payloads)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-interceptors-types.html)
-- [PingOne Authorize decision endpoints](https://docs.pingidentity.com/pingone/authorization_using_pingone_authorize/p1az_decision_endpoints.html)
+This repo used to hold a Python interceptor that called the PingOne Authorize decision endpoint
+(`pingone_authorize_interceptor.py`). It's still in the history at commit `14ebe74`.

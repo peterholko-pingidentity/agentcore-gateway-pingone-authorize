@@ -1,0 +1,15 @@
+{
+  "source_ip": "0.0.0.0",
+  "source_port": 1,
+  "method": "POST",
+  "url": "https://mcp-protocol-lab-gateway-v3-4ab20jawt3.gateway.bedrock-agentcore.us-east-1.amazonaws.com:443/mcp",
+  "http_version": "1.1",
+  "headers": [
+    {"authorization": "Bearer new-modified-token-from-p1az"},
+    {"content-type": "application/json"},
+    {"Host": "mcp-protocol-lab-gateway-v3-4ab20jawt3.gateway.bedrock-agentcore.us-east-1.amazonaws.com"},
+    {"x-custom-enrichment": "policy-value-123"}
+  ],
+  "body": "{\"method\":\"tools/call\",\"params\":{\"name\":\"mcp-protocol-lab___echo_payload\",\"arguments\":{\"note\":\"modified by policy\"},\"_meta\":{\"progressToken\":3}},\"jsonrpc\":\"2.0\",\"id\":3}",
+  "state": "eyJhbGciOiJSUzI1NiJ9.modified-state"
+}

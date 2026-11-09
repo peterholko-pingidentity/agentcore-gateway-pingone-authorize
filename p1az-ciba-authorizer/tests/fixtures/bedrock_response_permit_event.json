@@ -1,0 +1,41 @@
+{
+  "interceptorInputVersion": "1.0",
+  "mcp": {
+    "gatewayRequest": {
+      "path": "/mcp",
+      "httpMethod": "POST",
+      "headers": {
+        "Host": "mcp-protocol-lab-gateway-v3-4ab20jawt3.gateway.bedrock-agentcore.us-east-1.amazonaws.com",
+        "content-type": "application/json",
+        "x-paz-state": "eyJhbGciOiJSUzI1NiJ9.test-state"
+      },
+      "body": {
+        "id": 3,
+        "method": "tools/call",
+        "params": {
+          "name": "mcp-protocol-lab___echo_payload",
+          "arguments": {"note": "this is a note"}
+        },
+        "jsonrpc": "2.0"
+      }
+    },
+    "gatewayResponse": {
+      "statusCode": 200,
+      "headers": {
+        "content-type": "application/json",
+        "mcp-session-id": "session-abc-123"
+      },
+      "body": {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "result": {
+          "content": [{"type": "text", "text": "this is a note"}]
+        }
+      },
+      "isStreamingResponse": false
+    },
+    "rawGatewayRequest": {
+      "body": "{\"method\":\"tools/call\",\"params\":{\"name\":\"mcp-protocol-lab___echo_payload\",\"arguments\":{\"note\":\"this is a note\"}},\"jsonrpc\":\"2.0\",\"id\":3}"
+    }
+  }
+}

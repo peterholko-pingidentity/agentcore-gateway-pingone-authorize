@@ -1,0 +1,11 @@
+{
+  "id": "err-abc-123-def-456",
+  "code": "REQUEST_FAILED",
+  "message": "An internal error occurred while processing the request",
+  "details": [
+    {
+      "code": "UNEXPECTED_ERROR",
+      "message": "Internal server error"
+    }
+  ]
+}

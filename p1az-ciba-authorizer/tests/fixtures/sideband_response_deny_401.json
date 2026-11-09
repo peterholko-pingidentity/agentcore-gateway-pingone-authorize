@@ -1,0 +1,20 @@
+{
+  "source_ip": "0.0.0.0",
+  "source_port": 1,
+  "method": "POST",
+  "url": "https://mcp-protocol-lab-gateway-v3-4ab20jawt3.gateway.bedrock-agentcore.us-east-1.amazonaws.com:443/mcp",
+  "http_version": "1.1",
+  "headers": [],
+  "body": null,
+  "response": {
+    "response_code": "401",
+    "response_status": "Unauthorized",
+    "http_version": "1.1",
+    "headers": [
+      {"www-authenticate": "Bearer realm=\"PingOne Authorize\""},
+      {"content-length": "0"},
+      {"date": "Wed, 20 Dec 2023 22:31:35 GMT"}
+    ]
+  },
+  "state": "eyJhbGciOiJSUzI1NiJ9.deny-state"
+}

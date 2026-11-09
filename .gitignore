@@ -1,25 +1,25 @@
-# Python
-__pycache__/
-*.py[cod]
-*.egg-info/
-.eggs/
-build/
-dist/
-.venv/
-venv/
-env/
+# Credentials and local state: never commit
+.env
+.env.*
+!.env.example
+.state.json
+*.pem
+*.key
+*.p8
+*.p12
 
-# Packaging artifacts
+# Build output
+target/
+target-lambda/
+build/
 *.zip
 
-# Local environment / secrets
-.env
-*.local
+# Python
+__pycache__/
+.pytest_cache/
+.venv/
 
-# Editor / OS
+# Editors and OS
 .DS_Store
-.idea/
-.vscode/
-
-# Claude Code local settings
-.claude/settings.local.json
+.claude/
+.polaris/

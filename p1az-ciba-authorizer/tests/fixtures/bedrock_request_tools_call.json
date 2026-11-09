@@ -1,0 +1,54 @@
+{
+  "interceptorInputVersion": "1.0",
+  "mcp": {
+    "gatewayRequest": {
+      "path": "/mcp",
+      "httpMethod": "POST",
+      "headers": {
+        "referer": "http://localhost:6274/",
+        "x-amzn-tls-version": "TLSv1.3",
+        "sec-fetch-site": "cross-site",
+        "origin": "http://localhost:6274",
+        "authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.test-token",
+        "x-amzn-tls-cipher-suite": "TLS_AES_128_GCM_SHA256",
+        "sec-ch-ua-mobile": "?0",
+        "content-type": "application/json",
+        "Content-Length": "164",
+        "sec-fetch-mode": "cors",
+        "accept-language": "en-US,en;q=0.9",
+        "X-Forwarded-Proto": "https",
+        "Host": "mcp-protocol-lab-gateway-v3-4ab20jawt3.gateway.bedrock-agentcore.us-east-1.amazonaws.com",
+        "priority": "u=1, i",
+        "X-Forwarded-Port": "443",
+        "X-Amzn-Trace-Id": "Root=1-69d73a18-3dda03e45b13a84878ca3d72",
+        "accept": "application/json, text/event-stream",
+        "sec-ch-ua": "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\"",
+        "mcp-protocol-version": "2025-11-25",
+        "sec-ch-ua-platform": "\"macOS\"",
+        "X-Forwarded-For": "136.62.193.165",
+        "accept-encoding": "gzip, deflate, br, zstd",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+        "sec-fetch-dest": "empty"
+      },
+      "body": {
+        "id": 3,
+        "method": "tools/call",
+        "params": {
+          "name": "mcp-protocol-lab___echo_payload",
+          "_meta": {
+            "progressToken": 3
+          },
+          "arguments": {
+            "note": "this is a note"
+          }
+        },
+        "jsonrpc": "2.0"
+      },
+      "context": null
+    },
+    "gatewayResponse": null,
+    "rawGatewayRequest": {
+      "body": "{\"method\":\"tools/call\",\"params\":{\"name\":\"mcp-protocol-lab___echo_payload\",\"arguments\":{\"note\":\"this is a note\"},\"_meta\":{\"progressToken\":3}},\"jsonrpc\":\"2.0\",\"id\":3}"
+    }
+  }
+}

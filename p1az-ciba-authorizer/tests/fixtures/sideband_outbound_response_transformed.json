@@ -1,0 +1,11 @@
+{
+  "response_code": "200",
+  "response_status": "OK",
+  "http_version": "1.1",
+  "headers": [
+    {"content-type": "application/json"},
+    {"mcp-session-id": "session-abc-123"},
+    {"x-paz-transformed": "true"}
+  ],
+  "body": "{\"jsonrpc\":\"2.0\",\"id\":3,\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"[REDACTED]\"}]}}"
+}

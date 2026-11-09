@@ -1,0 +1,31 @@
+{
+  "interceptorInputVersion": "1.0",
+  "mcp": {
+    "gatewayRequest": {
+      "path": "/mcp",
+      "httpMethod": "POST",
+      "headers": {
+        "authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.test-token",
+        "content-type": "application/json",
+        "Host": "mcp-protocol-lab-gateway-v3-4ab20jawt3.gateway.bedrock-agentcore.us-east-1.amazonaws.com",
+        "X-Forwarded-For": "136.62.193.165",
+        "X-Forwarded-Port": "443",
+        "X-Forwarded-Proto": "https",
+        "X-Amzn-Trace-Id": "Root=1-69d73a18-aabbccddeeff112233445566",
+        "accept": "application/json, text/event-stream",
+        "mcp-protocol-version": "2025-11-25",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
+      },
+      "body": {
+        "id": 1,
+        "method": "tools/list",
+        "jsonrpc": "2.0"
+      },
+      "context": null
+    },
+    "gatewayResponse": null,
+    "rawGatewayRequest": {
+      "body": "{\"method\":\"tools/list\",\"jsonrpc\":\"2.0\",\"id\":1}"
+    }
+  }
+}

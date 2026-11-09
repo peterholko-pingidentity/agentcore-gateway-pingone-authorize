@@ -1,0 +1,10 @@
+{
+  "response_code": "403",
+  "response_status": "Forbidden",
+  "http_version": "1.1",
+  "headers": [
+    {"www-authenticate": "Bearer error=\"insufficient_scope\", scope=\"files:write\", error_description=\"Missing tool scope\""},
+    {"mcp-session-id": "session-abc-123"}
+  ],
+  "body": "{\"jsonrpc\":\"2.0\",\"id\":3,\"error\":{\"code\":-32600,\"message\":\"Response rejected by policy\"}}"
+}

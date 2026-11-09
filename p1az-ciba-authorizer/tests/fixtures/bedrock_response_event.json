@@ -1,0 +1,40 @@
+{
+  "interceptorInputVersion": "1.0",
+  "mcp": {
+    "gatewayRequest": {
+      "path": "/mcp",
+      "httpMethod": "POST",
+      "headers": {
+        "Host": "mcp-protocol-lab-gateway-v3-4ab20jawt3.gateway.bedrock-agentcore.us-east-1.amazonaws.com",
+        "content-type": "application/json",
+        "x-paz-response-headers": "eyJ3d3ctYXV0aGVudGljYXRlIjogIkJlYXJlciByZWFsbT1cIlBpbmdPbmUgQXV0aG9yaXplXCIiLCAiY29udGVudC1sZW5ndGgiOiAiMCJ9"
+      },
+      "body": {
+        "id": 3,
+        "method": "tools/call",
+        "params": {
+          "name": "mcp-protocol-lab___echo_payload",
+          "arguments": {"note": "this is a note"}
+        },
+        "jsonrpc": "2.0"
+      }
+    },
+    "gatewayResponse": {
+      "statusCode": 401,
+      "headers": {
+        "mcp-session-id": "session-abc-123"
+      },
+      "body": {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "error": {
+          "code": -32600,
+          "message": "Unauthorized"
+        }
+      }
+    },
+    "rawGatewayRequest": {
+      "body": "{\"method\":\"tools/call\",\"params\":{\"name\":\"mcp-protocol-lab___echo_payload\",\"arguments\":{\"note\":\"this is a note\"}},\"jsonrpc\":\"2.0\",\"id\":3}"
+    }
+  }
+}
