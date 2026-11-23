@@ -605,4 +605,4 @@ This repo used to hold a Python interceptor that called the PingOne Authorize de
 
 ---
 
-*Based on the demo as deployed on 5 November 2026, with MCP protocol version 2026-07-28: AgentCore Gateway with the Slack MCP target, PingOne Authorize API Access Management, and PingOne CIBA by email. The Snowflake target is off until the known issue in step 6 is fixed.*
+*Based on the demo as deployed on 5 November 2026, with MCP protocol version 2026-07-28: AgentCore Gateway with the Slack MCP target, PingOne Authorize API Access Management, and PingOne CIBA by email.*
