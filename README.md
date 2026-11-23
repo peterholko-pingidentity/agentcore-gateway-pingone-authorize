@@ -272,8 +272,6 @@ Two OAuth credential providers do the two token exchanges. Both use PingOne's di
 > **Known issue: some older MCP servers refuse every request**
 >
 > AgentCore Gateway currently passes the client's `2026-07-28` fields in `params._meta` (`io.modelcontextprotocol/protocolVersion`, `clientInfo` and `clientCapabilities`) on to MCP servers it talks to at an older version. A server that ignores those fields works, like the demo's Slack server. A server that checks them against the request's headers refuses the request, with errors such as "Header MCP-Protocol-Version does not match the request body" or "Missing required header Mcp-Method". With `listingMode` `DYNAMIC`, the agent's whole tool list then fails.
->
-> Snowflake's managed MCP server, which supports protocol version 2025-11-25, is one of these, so the demo leaves it off the Gateway for now. The authorizer can't remove the fields, because the Gateway requires them in the interceptor's output. We've reported the issue to AWS. Until it's fixed, try each MCP server through the Gateway before you rely on it.
 
 ## 7. Deploy the agent on AgentCore Runtime
 
