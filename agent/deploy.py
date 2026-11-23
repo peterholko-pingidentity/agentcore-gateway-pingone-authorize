@@ -9,7 +9,7 @@
 4. arm64 zip per docs/contracts.md "Packaging", uploaded to s3://acgw-agent-<account>-<region>.
 5. Execution role `acgw-agent-runtime`: Bedrock invoke, workload-token and token-vault APIs, the secret, logs.
 6. Runtime `acgw_agent`, its JWT authorizer audience = its own invocation URL, `Authorization` allowlisted.
-7. PingOne resource `acgw-spike agent-runtime`: audience -> the runtime URL (sign-in tokens are minted for it).
+7. PingOne resource `agentcore-demo agent-runtime`: audience -> the runtime URL (sign-in tokens are minted for it).
 
 IDs are saved in agent/.state.json. Reads .env and spike/.state.json; writes neither.
 """
@@ -41,7 +41,7 @@ WORKLOAD_NAME = "acgw-agent"
 SECRET_NAME = "acgw/approvals-client"
 AGENT_OBO_PROVIDER = "acgw-spike-agent-obo"
 MODEL_ID = "us.anthropic.claude-sonnet-5-5"
-AGENT_RESOURCE = "acgw-spike agent-runtime"
+AGENT_RESOURCE = "agentcore-demo agent-runtime"
 DEMO_USERS = ("alice", "bob", "curtis")
 SOURCES = ("main.py", "acgw")
 

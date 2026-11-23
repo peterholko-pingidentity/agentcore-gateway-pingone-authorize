@@ -121,7 +121,7 @@ CA bundle.
 Builds `agent/build/deployment.zip` (arm64, CPython 3.12 wheels, no `bin/` or `__pycache__`, explicit file
 modes), uploads it to `s3://acgw-agent-<account>-<region>`, upserts role `acgw-agent-runtime` and runtime
 `acgw_agent` (HTTP, PingOne JWT authorizer with audience = the runtime's own URL, `Authorization` allowlisted),
-then sets the PingOne resource `acgw-spike agent-runtime` audience to the runtime URL. IDs and the URL are in
+then sets the PingOne resource `agentcore-demo agent-runtime` audience to the runtime URL. IDs and the URL are in
 `agent/.state.json`. After the audience changes, sign in again for a token the runtime accepts, then:
 
 ```bash
